@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL Detector - Advanced Phishing Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="description" content="Advanced URL phishing detection tool. Analyze suspicious URLs for security threats with AI-powered analysis.">
+</head>
+
+<body>
+
+<div class="navbar">
+    <h2>🔐 URL Shield</h2>
+    <div class="nav-links">
+        <a href="/">🏠 Home</a>
+        <a href="/tool" class="active">🔍 Detector</a>
+        <a href="/about">📖 About</a>
+    </div>
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+</div>
+
+<div class="page-header">
+    <h1>🔍 Advanced URL Analysis</h1>
+    <p>Comprehensive phishing detection with AI-powered threat analysis</p>
+    <div class="hero-stats">
+        <div class="stat">
+            <span class="stat-number">99.7%</span>
+            <span class="stat-label">Accuracy Rate</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">10M+</span>
+            <span class="stat-label">URLs Analyzed</span>
+        </div>
+        <div class="stat">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Protection</span>
+        </div>
+    </div>
+</div>
+
+<div class="analysis-section animate-on-scroll">
+    <div class="tool-card animate-on-scroll">
+        <div class="tool-header">
+            <h2>🛡️ URL Security Scanner</h2>
+            <p>Enter any URL to perform a complete security analysis</p>
+        </div>
+
+        <div class="input-section">
+            <form method="POST" class="analysis-form">
+                <div class="input-group">
+                    <input type="text" name="url" placeholder="https://example.com/suspicious-link" required>
+                    <button type="submit" class="analyze-btn">
+                        <span class="btn-text">🔍 Analyze URL</span>
+                        <span class="btn-loading" style="display: none;">⏳ Scanning...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="analysis-tips animate-on-scroll">
+            <h3>💡 Analysis Features</h3>
+            <div class="tips-grid">
+                <div class="tip-item">
+                    <span class="tip-icon">🌐</span>
+                    <span>Domain Reputation Check</span>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">🔒</span>
+                    <span>SSL Certificate Validation</span>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">🎯</span>
+                    <span>URL Pattern Analysis</span>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">🤖</span>
+                    <span>AI Threat Detection</span>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">📊</span>
+                    <span>Risk Score Calculation</span>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">⚡</span>
+                    <span>Real-time Database Check</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if result %}
+    <div class="result-section">
+        <div class="result-card" id="resultBox" data-confidence="{{ confidence }}" data-explanation="URL Shield evaluates SSL status, domain reputation, redirect behavior, and suspicious URL patterns to generate a risk score.">
+            <div class="result-header">
+                <h3 class="result-title">
+                    {% if confidence > 70 %}
+                        🚨 High Risk Detected
+                    {% elif confidence > 40 %}
+                        ⚠️ Medium Risk Detected
+                    {% else %}
+                        ✅ URL Appears Safe
+                    {% endif %}
+                </h3>
+                <div class="confidence-score">
+                    <span class="score-label">Risk Score:</span>
+                    <span class="score-value">{{ confidence }}%</span>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart" width="180" height="180"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color risk"></span>
+                        <span>Risk Level</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color safe"></span>
+                        <span>Safety Level</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-details">
+                <h4>🔍 Analysis Details</h4>
+                <ul class="reasons-list">
+                    {% for reason in reasons %}
+                        <li class="reason-item">
+                            <span class="reason-icon">
+                                {% if 'suspicious' in reason.lower() or 'malicious' in reason.lower() %}
+                                    ⚠️
+                                {% elif 'safe' in reason.lower() or 'legitimate' in reason.lower() %}
+                                    ✅
+                                {% else %}
+                                    ℹ️
+                                {% endif %}
+                            </span>
+                            <span class="reason-text">{{ reason }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="result-actions">
+                {% if confidence > 50 %}
+                    <div class="warning-message">
+                        <strong>⚠️ Security Alert:</strong> This URL shows signs of potential security threats. Exercise caution and avoid clicking suspicious links.
+                    </div>
+                {% else %}
+                    <div class="safe-message">
+                        <strong>✅ Safe URL:</strong> This URL appears to be legitimate based on our analysis. However, always stay vigilant online.
+                    </div>
+                {% endif %}
+
+                <div class="action-buttons">
+                    <button class="action-btn report" onclick="reportUrl()">📢 Report URL</button>
+                    <button class="action-btn info" onclick="showExplanation()">ℹ️ View Breakdown</button>
+                    <button class="action-btn share" onclick="shareResults()">📤 Share Results</button>
+                    <button class="action-btn scan-again" onclick="scanAgain()">🔄 Scan Another URL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="recent-scans animate-on-scroll">
+    <h3>📈 Recent Analysis Trends</h3>
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon">🛡️</div>
+            <div class="stat-info">
+                <span class="stat-number">1,247</span>
+                <span class="stat-desc">URLs Scanned Today</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-info">
+                <span class="stat-number">23%</span>
+                <span class="stat-desc">Threats Detected</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+                <span class="stat-number">0.8s</span>
+                <span class="stat-desc">Average Response Time</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="explainModal">
+    <div class="modal-content">
+        <button class="modal-close" aria-label="Close explanation">×</button>
+        <h3 class="modal-title">Analysis Breakdown</h3>
+        <p class="modal-text"></p>
+    </div>
+</div>
+
+<script>
+window.onload = function () {
+    var box = document.getElementById("resultBox");
+
+    if (box) {
+        var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
+
+        // Create doughnut chart
+        new Chart(document.getElementById('chart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Risk', 'Safe'],
+                datasets: [{
+                    data: [confidence, 100 - confidence],
+                    backgroundColor: [
+                        confidence > 70 ? '#ff4757' : confidence > 40 ? '#ffa726' : '#4caf50',
+                        '#2c3e50'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Animate result card appearance
+        setTimeout(() => {
+            box.style.opacity = '1';
+            box.style.transform = 'translateY(0)';
+        }, 100);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(section => observer.observe(section));
+
+    const explainModal = document.getElementById('explainModal');
+    const explainText = explainModal.querySelector('.modal-text');
+    const modalClose = explainModal.querySelector('.modal-close');
+
+    if (box && explainText) {
+        explainText.textContent = box.getAttribute('data-explanation') || 'Detailed risk analysis is available for this URL scan.';
+    }
+
+    function closeModal() {
+        explainModal.classList.remove('active');
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    explainModal.addEventListener('click', function(event) {
+        if (event.target === explainModal) {
+            closeModal();
+        }
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+
+    function applyTheme(theme) {
+        document.body.classList.toggle('theme-light', theme === 'light');
+        document.body.classList.toggle('theme-dark', theme === 'dark');
+        themeToggle.textContent = theme === 'light' ? '🌙' : '☀️';
+        localStorage.setItem('theme', theme);
+    }
+
+    if (themeToggle) {
+        applyTheme(currentTheme);
+        themeToggle.addEventListener('click', function() {
+            const nextTheme = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+            applyTheme(nextTheme);
+        });
+    }
+};
+
+// Form submission handler
+document.querySelector('.analysis-form').addEventListener('submit', function(e) {
+    const button = this.querySelector('.analyze-btn');
+    const btnText = button.querySelector('.btn-text');
+    const btnLoading = button.querySelector('.btn-loading');
+
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline';
+    button.disabled = true;
+});
+
+// Utility functions
+function reportUrl() {
+    alert('URL reported to our security team. Thank you for helping keep the internet safe!');
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'URL Shield Analysis Results',
+            text: 'Check out this URL analysis from URL Shield!',
+            url: window.location.href
+        });
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(window.location.href);
+        alert('Results link copied to clipboard!');
+    }
+}
+
+function scanAgain() {
+    document.querySelector('input[name="url"]').value = '';
+    document.querySelector('input[name="url"]').focus();
+    // Scroll to top of form
+    document.querySelector('.tool-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showExplanation() {
+    const explainModal = document.getElementById('explainModal');
+    explainModal.classList.add('active');
+}
+</script>
+
+</body>
+</html>

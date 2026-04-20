@@ -28,7 +28,7 @@ body.theme-light {
     --accent-alt: #9333ea;
     --card-bg: rgba(255, 255, 255, 0.82);
     --card-border: rgba(81, 91, 109, 0.15);
-    --nav-bg: rgba(255, 255, 255, 0.92);
+    --nav-bg: rgba(255, 255, 255, 0.35);
     --nav-link: rgba(55, 65, 81, 0.85);
     --btn-bg: linear-gradient(45deg, #2563eb, #9333ea);
     --btn-text: #ffffff;
@@ -197,13 +197,20 @@ body.theme-light::before {
     left: 0;
     right: 0;
     z-index: 1000;
-    backdrop-filter: blur(20px) saturate(180%);
     background: var(--nav-bg);
-    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
-    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
 }
-
+body.theme-light .navbar {
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
 .theme-toggle {
     cursor: pointer;
     width: 44px;

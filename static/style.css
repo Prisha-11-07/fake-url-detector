@@ -125,6 +125,18 @@ body.theme-light::before {
     filter: blur(3px);
     z-index: -2;
 }
+/* Light theme fix for Learn More button */
+body.light-theme .learn-more {
+    color: #111; /* dark text */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .learn-more:hover {
+    background: rgba(255, 255, 255, 0.85);
+    color: #000;
+}
 
 @keyframes securityScan {
     0% {
@@ -205,11 +217,44 @@ body.theme-light::before {
     transition: all 0.3s ease;
 }
 body.theme-light .navbar {
-    background: rgba(255, 255, 255, 0.28);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.45);
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.22); /* softer, more transparent */
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+
+    /* subtle layered shadow like macOS */
+    box-shadow:
+        0 8px 30px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    /* makes it feel lighter */
+    transition: all 0.3s ease;
+}
+body.theme-light .navbar a {
+    color: rgba(15, 23, 42, 0.75);
+    font-weight: 500;
+}
+
+body.theme-light .navbar a:hover {
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    color: #0f172a;
+}
+body.theme-light .navbar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        rgba(255,255,255,0.8),
+        rgba(255,255,255,0.2),
+        rgba(255,255,255,0.8)
+    );
 }
 .theme-toggle {
     cursor: pointer;
@@ -375,6 +420,13 @@ body.theme-light .hero {
 
 body.theme-light .hero::before {
     background: rgba(0, 0, 0, 0.45);
+}
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.4); /* light overlay */
+    pointer-events: none;
 }
 
 body.theme-light .about-hero::before {
@@ -2344,4 +2396,9 @@ input {
         text-align: center;
         gap: 10px;
     }
+}
+/* Light theme heading visibility */
+body.light-theme .why-choose h2 {
+    color: #111; /* dark text */
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.6);
 }

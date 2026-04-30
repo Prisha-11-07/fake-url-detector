@@ -46,7 +46,7 @@
         </div>
 
         <div class="input-section">
-            <form method="POST" class="analysis-form">
+            <form action="/tool" method="POST" class="analysis-form">
                 <div class="input-group">
                     <input type="text" name="url" placeholder="https://example.com/suspicious-link" required>
                     <button type="submit" class="analyze-btn">
@@ -170,7 +170,7 @@
         <div class="stat-card">
             <div class="stat-icon">🛡️</div>
             <div class="stat-info">
-                <span class="stat-number">1,247</span>
+                <span class="stat-number">{{ scan_count | default(0) }}</span>
                 <span class="stat-desc">URLs Scanned Today</span>
             </div>
         </div>

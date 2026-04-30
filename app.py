@@ -1,4 +1,20 @@
 from flask import Flask, render_template, request
+from datetime import date
+import json
+import os
+
+DATA_FILE = "scan_data.json"
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {"date": str(date.today()), "count": 0,"threats": 0}
+    
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
 
 app = Flask(__name__)
 
@@ -45,19 +61,43 @@ def home():
 
 @app.route('/tool', methods=['GET', 'POST'])
 def tool():
-    result = None
-    reasons = []
-    confidence = 0
+    data = load_data()   # Always available
 
     if request.method == 'POST':
-        url = request.form.get('url', '')
-        result, reasons, confidence = predict_url(url)
+        url = request.form['url']
 
-    return render_template('tool.html',
-                           result=result,
-                           reasons=reasons,
-                           confidence=confidence)
+        # Reset if new day
+        if data["date"] != str(date.today()):
+            data["date"] = str(date.today())
+            data["count"] = 0
 
+        # Increment count
+        data["count"] += 1
+        save_data(data)
+
+        try:
+            # 🔴 Your ML function
+            result, reasons, confidence = predict_url(url)
+
+        except Exception as e:
+            # ✅ Prevent crash (VERY IMPORTANT)
+            result = "Error"
+            confidence = 0
+            reasons = [f"Error occurred: {str(e)}"]
+
+        return render_template(
+            'tool.html',
+            result=result,
+            confidence=confidence,
+            reasons=reasons,
+            scan_count=data["count"]
+        )
+
+    # GET request
+    return render_template(
+        'tool.html',
+        scan_count=data["count"]
+    )
 
 @app.route('/about')
 def about():

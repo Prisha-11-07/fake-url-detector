@@ -28,8 +28,8 @@ body.theme-light {
     --accent-alt: #9333ea;
     --card-bg: rgba(255, 255, 255, 0.82);
     --card-border: rgba(81, 91, 109, 0.15);
-    --nav-bg: rgba(255, 255, 255, 0.35);
-    --nav-link: rgba(55, 65, 81, 0.85);
+    --nav-bg: rgba(255, 255, 255, 0.75);   
+    --nav-link: #0f172a;                  
     --btn-bg: linear-gradient(45deg, #2563eb, #9333ea);
     --btn-text: #ffffff;
     --section-bg: rgba(255, 255, 255, 0.82);
@@ -37,7 +37,20 @@ body.theme-light {
     --shadow: 0 12px 40px rgba(15, 23, 42, 0.15);
     --box-shadow: 0 10px 30px rgba(37, 99, 235, 0.18);
 }
-
+body.theme-light .nav-links a {
+    color: #0f172a !important;   /* dark text */
+    font-weight: 700;            /* bold */
+    letter-spacing: 0.5px;
+}
+body.theme-light .nav-links a.active {
+    color: #000 !important;
+}
+body.theme-light .navbar {
+    background: rgba(255, 255, 255, 0.65);   /* semi-transparent */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
 html {
     background: var(--bg-color);
 }

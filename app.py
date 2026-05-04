@@ -2,8 +2,13 @@ from flask import Flask, render_template, request
 from datetime import date
 import json
 import os
+import requests   # ✅ ADDED
 
 DATA_FILE = "scan_data.json"
+
+# ✅ BACKEND API LINK (ADDED)
+BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
+
 
 def load_data():
     if not os.path.exists(DATA_FILE):
@@ -18,6 +23,7 @@ def save_data(data):
 
 app = Flask(__name__)
 
+# 🔴 (Your old ML function kept as backup — no change)
 def predict_url(url):
     reasons = []
     score = 0
@@ -54,6 +60,7 @@ def predict_url(url):
 
     return result, reasons, confidence
 
+
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -61,26 +68,34 @@ def home():
 
 @app.route('/tool', methods=['GET', 'POST'])
 def tool():
-    data = load_data()   # Always available
+    data = load_data()
 
     if request.method == 'POST':
         url = request.form['url']
 
-        # Reset if new day
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
             data["count"] = 0
 
-        # Increment count
         data["count"] += 1
         save_data(data)
 
         try:
-            # 🔴 Your ML function
-            result, reasons, confidence = predict_url(url)
+            # ✅ CALL BACKEND API INSTEAD OF LOCAL FUNCTION
+            response = requests.post(
+                BACKEND_URL,
+                json={"url": url}
+            )
+
+            backend_data = response.json()
+            print(backend_data)  # 🔴 DEBUG (check terminal)
+
+            # ✅ ADJUST BASED ON BACKEND RESPONSE
+            result = backend_data.get("result") or backend_data.get("prediction") or "Unknown"
+            confidence = backend_data.get("confidence", 0)
+            reasons = backend_data.get("reasons", ["No details provided"])
 
         except Exception as e:
-            # ✅ Prevent crash (VERY IMPORTANT)
             result = "Error"
             confidence = 0
             reasons = [f"Error occurred: {str(e)}"]
@@ -93,11 +108,11 @@ def tool():
             scan_count=data["count"]
         )
 
-    # GET request
     return render_template(
         'tool.html',
         scan_count=data["count"]
     )
+
 
 @app.route('/about')
 def about():

@@ -81,19 +81,31 @@ def tool():
         save_data(data)
 
         try:
-            # ✅ CALL BACKEND API INSTEAD OF LOCAL FUNCTION
             response = requests.post(
                 BACKEND_URL,
                 json={"url": url}
             )
 
             backend_data = response.json()
-            print(backend_data)  # 🔴 DEBUG (check terminal)
+            print(backend_data)
 
-            # ✅ ADJUST BASED ON BACKEND RESPONSE
-            result = backend_data.get("result") or backend_data.get("prediction") or "Unknown"
-            confidence = backend_data.get("confidence", 0)
-            reasons = backend_data.get("reasons", ["No details provided"])
+            # ✅ 🔥 FIXED PART (READING CORRECT KEY)
+            verdict = backend_data.get("verdict", "").upper()
+
+            if verdict == "FAKE":
+                result = "Fake"
+                confidence = 90
+            elif verdict == "SUSPICIOUS":
+                result = "Suspicious"
+                confidence = 60
+            else:
+                result = "Safe"
+                confidence = 10
+
+            reasons = [
+                backend_data.get("message", "No details provided"),
+                f"Protocol: {backend_data.get('protocol', 'Unknown')}"
+            ]
 
         except Exception as e:
             result = "Error"

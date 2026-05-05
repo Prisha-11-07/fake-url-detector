@@ -52,7 +52,7 @@
                     {% endif %}
                 </h3>
                 <div class="confidence-score">
-                    <span class="score-label">Risk Score:</span>
+                    <span class="score-label">Confidence Score:</span>
                     <p><strong>Risk Level:</strong> {{ risk }}</p>
                     <span class="score-value">{{ confidence }}%</span>
                 </div>
@@ -165,9 +165,9 @@ window.onload = function () {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
         var result = (box.getAttribute("data-result") || "Suspicious").toLowerCase();
 
-        // Use backend-provided confidence as the risk score percentage
-        var riskPercentage = confidence;
-        var safePercentage = 100 - confidence;
+        // Use backend-provided confidence and map it to risk/safe depending on the backend result
+        var riskPercentage = result === "safe" ? 100 - confidence : confidence;
+        var safePercentage = 100 - riskPercentage;
 
         // Determine colors based on result type
         var riskColor, safeColor;

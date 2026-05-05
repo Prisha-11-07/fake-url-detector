@@ -1,55 +1,13 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 from datetime import date
 import json
 import os
 import requests
-# 🔥 ML IMPORTS
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-
-# 🔥 TRAINING DATA
-train_urls = [
-    "https://google.com",
-    "https://amazon.com",
-    "https://github.com",
-    "https://bankofamerica.com",
-
-    "http://login-bank.com",
-    "http://secure-paypal-login.com",
-    "http://verify-account-update.com",
-
-    "http://paypal-secure-update-login.com",
-    "http://amazon-login-security-alert.com",
-    "http://bank-verification-alert.com",
-
-    # short URLs
-    "http://bit.ly/abc123",
-    "http://tinyurl.com/fake",
-]
-
-train_labels = [
-    "SAFE", "SAFE", "SAFE", "SAFE",
-    "SUSPICIOUS", "SUSPICIOUS", "SUSPICIOUS",
-    "FAKE", "FAKE", "FAKE",
-    "SUSPICIOUS", "FAKE"
-]
-
-# 🔥 CREATE MODEL
-vectorizer = TfidfVectorizer()
-X_train = vectorizer.fit_transform(train_urls)
-
-model = LogisticRegression()
-model.fit(X_train, train_labels)
-
-SHORTENERS = [
-    "bit.ly", "tinyurl.com", "goo.gl", "t.co",
-    "ow.ly", "is.gd", "buff.ly", "adf.ly"
-]
 
 DATA_FILE = "scan_data.json"
 
 # ✅ Call external backend
-BACKEND_URL = "https://fake-url-detector-ml.onrender.com/api/predict"
+BACKEND_URL = "https://fake-url-detector-ml.onrender.com/predict"
 
 
 def load_data():
@@ -66,8 +24,6 @@ def save_data(data):
 
 
 app = Flask(__name__)
-
-import re
 
 def normalize_url(url):
     url = url.strip()
@@ -86,78 +42,6 @@ def extract_backend_value(data, keys):
             return data[key]
     return None
 
-
-# 🔥 IMPROVED DETECTION LOGIC
-def predict_url(url):
-    reasons = []
-    score = 0
-
-    url = normalize_url(url)
-    url_lower = url.lower()
-
-    # 🔴 HIGH RISK INDICATORS
-    if "@" in url:
-        reasons.append("Contains '@' (redirect attack)")
-        score += 40
-
-    if any(word in url_lower for word in ["login", "verify", "update", "secure", "account"]):
-        reasons.append("Contains phishing keywords")
-        score += 30
-
-    if any(word in url_lower for word in ["bank", "paypal", "amazon"]):
-        reasons.append("Impersonating trusted brand")
-        score += 25
-
-    # 🟠 MEDIUM RISK
-    if url.startswith("http://"):
-        reasons.append("Uses HTTP (not secure)")
-        score += 20
-
-    if "-" in url:
-        reasons.append("Suspicious '-' in domain")
-        score += 10
-
-    if len(url) > 75:
-        reasons.append("URL is too long")
-        score += 15
-
-    if url.count('.') > 3:
-        reasons.append("Too many subdomains")
-        score += 15
-
-    # 🔗 SHORT URL DETECTION
-    if any(short in url for short in SHORTENERS):
-        reasons.append("Shortened URL detected")
-        score += 25
-
-    # 🤖 ML prediction (adds intelligence)
-    features = vectorizer.transform([url])
-    prediction = model.predict(features)[0]
-
-    if prediction == "FAKE":
-        score += 20
-        reasons.append("ML model flags as phishing")
-    elif prediction == "SUSPICIOUS":
-        score += 10
-        reasons.append("ML model flags as suspicious")
-
-    # 🎯 FINAL DECISION
-    if score >= 70:
-        result = "Fake"
-        risk = "High Risk"
-    elif score >= 35:
-        result = "Suspicious"
-        risk = "Medium Risk"
-    else:
-        result = "Safe"
-        risk = "Low Risk"
-
-    confidence = min(score, 100)
-
-    if not reasons:
-        reasons.append("No suspicious patterns detected")
-
-    return result, reasons, confidence, risk
 
 @app.route('/')
 def home():
@@ -184,7 +68,6 @@ def tool():
         save_data(data)
 
         backend_data = {}
-        backend_available = False
 
         try:
             response = requests.post(
@@ -194,19 +77,22 @@ def tool():
             )
             response.raise_for_status()
             backend_data = response.json()
-            backend_available = True
 
-            risk = backend_data.get("risk", risk)
-            verdict = str(backend_data.get("verdict", "")).upper()
+            prediction = str(backend_data.get("prediction", backend_data.get("verdict", ""))).strip()
+            prediction_lower = prediction.lower()
 
-            if verdict == "FAKE":
+            if prediction_lower in ["fake", "malicious", "phishing", "malware"]:
                 result = "Fake"
-            elif verdict == "SUSPICIOUS":
+                risk = "High Risk"
+            elif prediction_lower in ["suspicious", "unknown", "uncertain"]:
                 result = "Suspicious"
-            elif verdict == "SAFE":
+                risk = "Medium Risk"
+            elif prediction_lower in ["safe", "legitimate", "benign"]:
                 result = "Safe"
+                risk = "Low Risk"
             else:
                 result = "Suspicious"
+                risk = "Medium Risk"
 
             confidence_value = extract_backend_value(
                 backend_data,
@@ -220,29 +106,18 @@ def tool():
                 except:
                     confidence = 0
             else:
-                # If the backend doesn't provide confidence, derive from verdict
-                confidence = 90 if result == "Fake" else 60 if result == "Suspicious" else 20
+                confidence = 0
 
-            message = backend_data.get("message") or backend_data.get("details") or backend_data.get("reasons")
-            if isinstance(message, list):
-                reasons = message
-            elif isinstance(message, str) and message.strip():
-                reasons = [message]
-            elif isinstance(backend_data.get("reasons"), list):
-                reasons = backend_data.get("reasons")
-            else:
-                reasons = ["No details provided"]
-
-            if isinstance(backend_data.get('protocol'), str):
-                reasons.append(f"Protocol: {backend_data.get('protocol')}")
-            else:
-                reasons.append(f"Protocol: {'HTTPS' if url.startswith('https://') else 'HTTP'}")
+            reasons = backend_data.get("reasons") or backend_data.get("details") or backend_data.get("message")
+            if isinstance(reasons, str):
+                reasons = [reasons]
+            if not isinstance(reasons, list):
+                reasons = ["No details provided by backend"]
 
         except Exception as e:
-            # Backend unavailable - fall back to local ML model
-            print(f"Backend Error: {str(e)}")
-            result, reasons, confidence, risk = predict_url(url)
-            reasons.insert(0, "(Using local analysis - backend unavailable)")
+            result = "Error"
+            confidence = 0
+            reasons = [f"Backend Error: {str(e)}"]
 
         return render_template(
             'tool.html',
@@ -254,29 +129,6 @@ def tool():
         )
 
     return render_template('tool.html', scan_count=data["count"], risk=risk)
-
-
-# ✅ BACKEND API (same app)
-@app.route('/api/predict', methods=['POST'])
-def api_predict():
-    data = request.get_json()
-    url = data.get("url", "")
-
-    result, reasons, confidence, risk = predict_url(url)
-
-    if result == "Fake":
-        verdict = "FAKE"
-    elif result == "Suspicious":
-        verdict = "SUSPICIOUS"
-    else:
-        verdict = "SAFE"
-
-    return jsonify({
-        "verdict": verdict,
-        "message": ", ".join(reasons),
-        "protocol": "HTTPS" if "https" in url else "HTTP",
-        "risk": risk
-    })
 
 
 @app.route('/about')

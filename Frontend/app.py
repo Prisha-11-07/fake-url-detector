@@ -105,6 +105,9 @@ def tool():
             )
             response.raise_for_status()
             backend_data = response.json()
+            
+            # Print backend response for debugging
+            print(f"✅ Backend Response: {backend_data}")
 
             # Try to find the main verdict from common backend keys
             verdict = None
@@ -148,30 +151,38 @@ def tool():
                 else:
                     confidence = 50
 
-            # Build user-friendly reasons
+            # Build user-friendly reasons - show all backend data
             if isinstance(backend_data, dict):
-                if backend_data.get("message"):
-                    reasons.append(str(backend_data.get("message")))
-                if backend_data.get("reason"):
-                    reasons.append(str(backend_data.get("reason")))
-                if backend_data.get("details"):
-                    details = backend_data.get("details")
-                    if isinstance(details, list):
-                        reasons.extend([str(item) for item in details])
+                reasons.append("--- Backend Analysis Results ---")
+                for key, value in backend_data.items():
+                    if isinstance(value, list):
+                        reasons.append(f"{key.upper()}: {', '.join([str(v) for v in value])}")
                     else:
-                        reasons.append(str(details))
-                if backend_data.get("protocol"):
-                    reasons.append(f"Protocol: {backend_data.get('protocol')}")
-                if backend_data.get("domain"):
-                    reasons.append(f"Domain: {backend_data.get('domain')}")
+                        reasons.append(f"{key.upper()}: {value}")
 
-            if not reasons:
-                reasons = ["No additional details were returned by the backend."]
+            if not reasons or len(reasons) == 1:
+                reasons = ["Backend response received but no details were parsed."]
 
+        except requests.exceptions.ConnectionError as e:
+            result = "Error"
+            confidence = 0
+            reasons = [f"❌ Connection Error: Cannot reach backend at {BACKEND_URL}", str(e)]
+        except requests.exceptions.HTTPError as e:
+            result = "Error"
+            confidence = 0
+            reasons = [f"❌ HTTP Error: {e.response.status_code} - {e.response.reason}", f"Backend URL: {BACKEND_URL}"]
+        except requests.exceptions.Timeout:
+            result = "Error"
+            confidence = 0
+            reasons = [f"❌ Backend Request Timeout (10s exceeded)", f"Backend URL: {BACKEND_URL}"]
         except requests.exceptions.RequestException as e:
-            result, reasons, confidence = fallback_scan(url, error_message=str(e))
-        except ValueError:
-            result, reasons, confidence = fallback_scan(url, error_message="Could not parse the backend response.")
+            result = "Error"
+            confidence = 0
+            reasons = [f"❌ Backend Request Failed: {str(e)}"]
+        except ValueError as e:
+            result = "Error"
+            confidence = 0
+            reasons = [f"❌ Backend returned invalid JSON: {str(e)}"]
 
         return render_template(
             'tool.html',

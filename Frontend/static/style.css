@@ -1692,6 +1692,7 @@ input {
     gap: 40px;
     max-width: 1200px;
     margin: 0 auto;
+    justify-items: center;
 }
 
 .mission-main-card {
@@ -1865,6 +1866,7 @@ input {
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
+    justify-items: center;
 }
 
 .process-card {
@@ -1946,6 +1948,7 @@ input {
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
+    justify-items: center;
 }
 
 .security-card {
@@ -2017,6 +2020,7 @@ input {
     gap: 40px;
     max-width: 1200px;
     margin: 0 auto;
+    justify-items: center;
 }
 
 .impact-story-card {
@@ -2216,6 +2220,10 @@ input {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .content-wrapper h2 {

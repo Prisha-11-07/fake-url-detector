@@ -63,14 +63,23 @@ def predict_url(url):
     return result, reasons, confidence
 
 
-def fallback_scan(url, error_message=None):
+def extract_backend_value(data, keys):
+    if not isinstance(data, dict):
+        return None
+    for key in keys:
+        if key in data and data[key] is not None:
+            return data[key]
+    for value in data.values():
+        if isinstance(value, dict):
+            nested = extract_backend_value(value, keys)
+            if nested is not None:
+                return nested
+    return None
+
+
+def fallback_scan(url):
     result, reasons, confidence = predict_url(url)
-
-    if error_message:
-        reasons.insert(0, f"Backend unavailable: {error_message}")
-    else:
-        reasons.insert(0, "Backend fallback activated. Using local scan.")
-
+    reasons.insert(0, "Local scan completed using fallback heuristics.")
     return result, reasons, confidence
 
 
@@ -101,6 +110,8 @@ def tool():
         confidence = 50
         reasons = []
         used_fallback = False
+        backend_error = None
+        backend_data = None
 
         try:
             response = requests.post(
@@ -114,14 +125,13 @@ def tool():
             print("✅ Backend Response:", backend_data)
 
             # 🔹 Get verdict
-            verdict = None
-            for key in ["verdict", "prediction", "result", "label", "status"]:
-                if key in backend_data:
-                    verdict = str(backend_data[key]).strip()
-                    break
+            verdict = extract_backend_value(
+                backend_data,
+                ["verdict", "prediction", "result", "label", "status"]
+            )
 
             if verdict:
-                v = verdict.upper()
+                v = str(verdict).strip().upper()
 
                 if v in ["FAKE", "PHISHING", "MALICIOUS", "UNSAFE"]:
                     result = "Fake"
@@ -135,11 +145,10 @@ def tool():
                 result = "Suspicious"
 
             # 🔹 Confidence
-            confidence_value = None
-            for key in ["confidence", "score", "probability"]:
-                if key in backend_data:
-                    confidence_value = backend_data[key]
-                    break
+            confidence_value = extract_backend_value(
+                backend_data,
+                ["confidence", "score", "probability"]
+            )
 
             if confidence_value is not None:
                 try:
@@ -165,7 +174,8 @@ def tool():
 
         except Exception as e:
             used_fallback = True
-            result, reasons, confidence = fallback_scan(url, str(e))
+            backend_error = str(e)
+            result, reasons, confidence = fallback_scan(url)
 
         return render_template(
             'tool.html',
@@ -173,7 +183,8 @@ def tool():
             confidence=confidence,
             reasons=reasons,
             scan_count=data["count"],
-            used_fallback=used_fallback
+            used_fallback=used_fallback,
+            backend_error=backend_error
         )
 
     return render_template('tool.html', scan_count=data["count"])

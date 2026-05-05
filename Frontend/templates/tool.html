@@ -58,8 +58,11 @@
             </div>
             {% if used_fallback %}
             <div class="fallback-note">
-                ⚠️ Backend unavailable. Showing local fallback scan.
-                {% if backend_error %}<br><small>{{ backend_error }}</small>{% endif %}
+                ⚠️ Using local fallback (backend unavailable)
+            </div>
+            {% else %}
+            <div class="backend-note">
+                ✓ Results from backend
             </div>
             {% endif %}
 

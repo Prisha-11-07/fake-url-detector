@@ -53,6 +53,7 @@
                 </h3>
                 <div class="confidence-score">
                     <span class="score-label">Risk Score:</span>
+                    <p><strong>Risk Level:</strong> {{ risk }}</p>
                     <span class="score-value">{{ confidence }}%</span>
                 </div>
             </div>
@@ -159,43 +160,28 @@
 <script>
 window.onload = function () {
     var box = document.getElementById("resultBox");
-    console.log("Result:", result, "Confidence:", confidence);
 
     if (box) {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
         var result = (box.getAttribute("data-result") || "Suspicious").toLowerCase();
 
-        // Determine risk percentage based on result and confidence
-        var riskPercentage;
-        var safePercentage;
-
-        if (result === "fake") {
-    riskPercentage = 100;
-    safePercentage = 0;
-} else if (result === "suspicious") {
-    riskPercentage = 60;
-    safePercentage = 40;
-} else if (result === "safe") {
-    riskPercentage = 0;
-    safePercentage = 100;
-} else {
-    riskPercentage = 0;
-    safePercentage = 0;
-}
+        // Use backend-provided confidence as the risk score percentage
+        var riskPercentage = confidence;
+        var safePercentage = 100 - confidence;
 
         // Determine colors based on result type
         var riskColor, safeColor;
         if (result === "fake") {
-            riskColor = '#ff4757'; // Red for fake
+            riskColor = '#ff4757';
             safeColor = '#2c3e50';
         } else if (result === "suspicious") {
-            riskColor = '#ffa726'; // Orange for suspicious
+            riskColor = '#ffa726';
             safeColor = '#2c3e50';
         } else if (result === "safe") {
-            riskColor = '#2c3e50';
-            safeColor = '#4caf50';
+            riskColor = '#4caf50';
+            safeColor = '#2c3e50';
         } else {
-            riskColor = '#ffa726';
+            riskColor = '#89909f';
             safeColor = '#2c3e50';
         }
 

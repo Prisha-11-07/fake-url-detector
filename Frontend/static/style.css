@@ -513,7 +513,6 @@ body.theme-light .hero-stats .stat,
 body.theme-light .feature-card,
 body.theme-light .card,
 body.theme-light .tool-card,
-body.theme-light .result-card,
 body.theme-light .detail-btn,
 body.theme-light .cta-btn.secondary,
 body.theme-light .section-description,
@@ -527,6 +526,13 @@ body.theme-light select {
     color: var(--text-color);
     border-color: rgba(81, 91, 109, 0.18);
     box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .result-card {
+    background: rgba(0, 0, 0, 0.35) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22) !important;
+    color: #ffffff !important;
 }
 
 body.theme-light .feature-card h3,
@@ -1373,6 +1379,7 @@ input {
     opacity: 0;
     transform: translateY(20px);
     transition: all 0.5s ease;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
 .result-header {

@@ -2,30 +2,28 @@ from flask import Flask, render_template, request
 from datetime import date
 import json
 import os
-import requests
+import requests   # ✅ ADDED
 
 DATA_FILE = "scan_data.json"
 
+# ✅ BACKEND API LINK (ADDED)
 BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
 
 
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"date": str(date.today()), "count": 0, "threats": 0}
+        return {"date": str(date.today()), "count": 0,"threats": 0}
     
     with open(DATA_FILE, "r") as f:
         return json.load(f)
-
 
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
-
 app = Flask(__name__)
 
-
-# 🔹 Local fallback scanner
+# 🔴 (Your old ML function kept as backup — no change)
 def predict_url(url):
     reasons = []
     score = 0
@@ -63,26 +61,6 @@ def predict_url(url):
     return result, reasons, confidence
 
 
-def extract_backend_value(data, keys):
-    if not isinstance(data, dict):
-        return None
-    for key in keys:
-        if key in data and data[key] is not None:
-            return data[key]
-    for value in data.values():
-        if isinstance(value, dict):
-            nested = extract_backend_value(value, keys)
-            if nested is not None:
-                return nested
-    return None
-
-
-def fallback_scan(url):
-    result, reasons, confidence = predict_url(url)
-    reasons.insert(0, "Local scan completed using fallback heuristics.")
-    return result, reasons, confidence
-
-
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -93,12 +71,8 @@ def tool():
     data = load_data()
 
     if request.method == 'POST':
-        url = request.form.get('url', '').strip()
+        url = request.form['url']
 
-        if not url:
-            return render_template('tool.html', scan_count=data["count"])
-
-        # Reset daily count
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
             data["count"] = 0
@@ -106,88 +80,55 @@ def tool():
         data["count"] += 1
         save_data(data)
 
-        result = "Suspicious"
-        confidence = 50
-        reasons = []
-        used_fallback = False
-        backend_error = None
-        backend_data = None
-
         try:
             response = requests.post(
                 BACKEND_URL,
-                json={"url": url},
-                timeout=10
+                json={"url": url}
             )
-            response.raise_for_status()
+
             backend_data = response.json()
+            print(backend_data)
 
-            print("✅ Backend Response:", backend_data)
+            # ✅ 🔥 FIXED PART (READING CORRECT KEY)
+            verdict = backend_data.get("verdict", "").upper()
 
-            # 🔹 Get verdict
-            verdict = extract_backend_value(
-                backend_data,
-                ["verdict", "prediction", "result", "label", "status"]
-            )
-
-            if verdict:
-                v = str(verdict).strip().upper()
-
-                if v in ["FAKE", "PHISHING", "MALICIOUS", "UNSAFE"]:
-                    result = "Fake"
-                elif v in ["SUSPICIOUS", "UNKNOWN", "WARN"]:
-                    result = "Suspicious"
-                elif v in ["SAFE", "LEGITIMATE", "CLEAN", "GOOD"]:
-                    result = "Safe"
-                else:
-                    result = "Suspicious"
-            else:
+            if verdict == "FAKE":
+                result = "Fake"
+                confidence = 90
+            elif verdict == "SUSPICIOUS":
                 result = "Suspicious"
+                confidence = 60
+            else:
+                result = "Safe"
+                confidence = 10
 
-            # 🔹 Confidence
-            confidence_value = extract_backend_value(
-                backend_data,
-                ["confidence", "score", "probability"]
-            )
-
-            if confidence_value is not None:
-                try:
-                    val = float(confidence_value)
-                    confidence = int(val * 100) if val <= 1 else int(val)
-                except:
-                    confidence = 0
-
-            # 🔹 Default confidence fix
-            if confidence == 0:
-                if result == "Fake":
-                    confidence = 90
-                elif result == "Suspicious":
-                    confidence = 60
-                elif result == "Safe":
-                    confidence = 20
-
-            # 🔹 Reasons
-            if isinstance(backend_data, dict):
-                reasons.append("--- Backend Analysis Results ---")
-                for k, v in backend_data.items():
-                    reasons.append(f"{k.upper()}: {v}")
+            reasons = [
+                backend_data.get("message", "No details provided"),
+                f"Protocol: {backend_data.get('protocol', 'Unknown')}"
+            ]
 
         except Exception as e:
-            used_fallback = True
-            backend_error = str(e)
-            result, reasons, confidence = fallback_scan(url)
+            result = "Error"
+            confidence = 0
+            reasons = [f"Error occurred: {str(e)}"]
 
         return render_template(
             'tool.html',
             result=result,
             confidence=confidence,
             reasons=reasons,
-            scan_count=data["count"],
-            used_fallback=used_fallback,
-            backend_error=backend_error
+            scan_count=data["count"]
         )
 
-    return render_template('tool.html', scan_count=data["count"])
+    return render_template(
+        'tool.html',
+        scan_count=data["count"]
+    )
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 
 if __name__ == '__main__':

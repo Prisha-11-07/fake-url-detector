@@ -40,16 +40,22 @@
 
     {% if result %}
     <div class="result-section">
-        <div class="result-card" id="resultBox" data-confidence="{{ confidence }}" data-explanation="URL Shield evaluates SSL status, domain reputation, redirect behavior, and suspicious URL patterns to generate a risk score.">
+        <div class="result-card" 
+     id="resultBox" 
+     data-confidence="{{ confidence }}" 
+     data-result="{{ result }}"
+     data-explanation="URL Shield evaluates SSL status, domain reputation, redirect behavior, and suspicious URL patterns to generate a risk score.">
             <div class="result-header">
                 <h3 class="result-title">
-                    {% if confidence > 70 %}
-                        🚨 High Risk Detected
-                    {% elif confidence > 40 %}
-                        ⚠️ Medium Risk Detected
-                    {% else %}
-                        ✅ URL Appears Safe
-                    {% endif %}
+                    {% if result == "Fake" %}
+    🚨 High Risk Detected
+{% elif result == "Suspicious" %}
+    ⚠️ Medium Risk Detected
+{% elif result == "Safe" %}
+    ✅ Safe to Use
+{% else %}
+    ℹ️ Unknown Result
+{% endif %}
                 </h3>
                 <div class="confidence-score">
                     <span class="score-label">Risk Score:</span>
@@ -92,7 +98,7 @@
             </div>
 
             <div class="result-actions">
-                {% if confidence > 50 %}
+                {% if result == "Fake" or result == "Suspicious" %}
                     <div class="warning-message">
                         <strong>⚠️ Security Alert:</strong> This URL shows signs of potential security threats. Exercise caution and avoid clicking suspicious links.
                     </div>
@@ -155,31 +161,42 @@ window.onload = function () {
 
     if (box) {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
+        
 
         // Create doughnut chart
         new Chart(document.getElementById('chart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Risk', 'Safe'],
-                datasets: [{
-                    data: [confidence, 100 - confidence],
-                    backgroundColor: [
-                        confidence > 70 ? '#ff4757' : confidence > 40 ? '#ffa726' : '#4caf50',
-                        '#2c3e50'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
+    type: 'doughnut',
+    data: {
+        labels: ['Risk', 'Safe'],
+        datasets: [{
+            data: [confidence, 100 - confidence],
+            backgroundColor: [
+                (function() {
+                    if (result === "Fake") {
+                        return '#ff4757'; // Red (High Risk)
+                    } else if (result === "Suspicious") {
+                        return '#ffa726'; // Orange (Medium Risk)
+                    } else if (result === "Safe") {
+                        return '#4caf50'; // Green (Safe)
+                    } else {
+                        return '#999'; // Default
                     }
-                }
+                })(),
+                '#2c3e50'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
             }
-        });
+        }
+    }
+});
 
         // Animate result card appearance
         setTimeout(() => {

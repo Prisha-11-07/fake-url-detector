@@ -147,9 +147,9 @@ def tool():
                 elif result == "Suspicious":
                     confidence = 60
                 elif result == "Safe":
-                    confidence = 10
-                else:
                     confidence = 50
+                else:
+                    confidence = 10
 
             # Build user-friendly reasons - show all backend data
             if isinstance(backend_data, dict):

@@ -1386,27 +1386,29 @@ input {
      transition: all 0.5s ease;
      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
      color: #ffffff;
-.result-header {
+ }
+ 
+ .result-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
     flex-wrap: wrap;
     gap: 15px;
-}
-
-.result-title {
+ }
+ 
+ .result-title {
     font-size: 24px;
     font-weight: 600;
-}
+    color: #ffffff;
+ }
 
 .confidence-score {
     text-align: right;
 }
 
 .score-label {
-    color: #94a3b8;
-    font-size: 14px;
+     color: #ffffff;
 }
 
 .score-value {
@@ -1446,7 +1448,7 @@ input {
     align-items: center;
     gap: 8px;
     font-size: 14px;
-    color: #94a3b8;
+    color: #ffffff;
 }
 
 .legend-color {
@@ -1468,14 +1470,9 @@ input {
 }
 
 .analysis-details h4 {
-    color: #00ffff;
+    color: #ffffff;
     margin-bottom: 15px;
     font-size: 18px;
-}
-
-.reasons-list {
-    list-style: none;
-    padding: 0;
 }
 
 .reason-item {
@@ -1496,7 +1493,7 @@ input {
 }
 
 .reason-text {
-    color: #e2e8f0;
+    color: #ffffff;
     line-height: 1.4;
 }
 
@@ -1510,24 +1507,17 @@ input {
     border-radius: 8px;
     margin-bottom: 20px;
     font-weight: 500;
+    color: #ffffff;
 }
 
 .warning-message {
-    background: rgba(255, 71, 87, 0.1);
+    background: rgba(255, 71, 87, 0.18);
     border: 1px solid rgba(255, 71, 87, 0.3);
-    color: #ff4757;
 }
 
 .safe-message {
-    background: rgba(76, 175, 80, 0.1);
+    background: rgba(76, 175, 80, 0.18);
     border: 1px solid rgba(76, 175, 80, 0.3);
-    color: #4caf50;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
 }
 
 .action-btn {
@@ -1573,7 +1563,8 @@ input {
 
 /* RECENT SCANS */
 .recent-scans {
-    margin-top: 60px;
+    margin: 60px auto 0;
+    max-width: 1000px;
     text-align: center;
 }
 

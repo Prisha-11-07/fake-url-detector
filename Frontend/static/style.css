@@ -395,8 +395,13 @@ body.theme-light .testimonial-card {
 }
 
 body.theme-light .cta-section {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(147, 51, 234, 0.1));
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
     border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+body.theme-light .cta-section h2,
+body.theme-light .cta-section p {
+    color: #ffffff;
 }
 
 body.theme-light .hero p,
@@ -2443,7 +2448,7 @@ body.theme-light .how-it-works .steps {
 
 /* STEP CARDS */
 body.theme-light .how-it-works .step {
-    background: rgba(255, 255, 255, 0.08);  /* glass effect */
+    background: rgba(0, 0, 0, 0.1);  /* darker background for white text */
     backdrop-filter: blur(10px);
     border-radius: 16px;
     padding: 25px;
@@ -2463,5 +2468,5 @@ body.theme-light .how-it-works .step:hover {
 /* TEXT INSIDE CARDS */
 body.theme-light .how-it-works .step h3,
 body.theme-light .how-it-works .step p {
-    color: var(--text-color);
+    color: #ffffff;
 }

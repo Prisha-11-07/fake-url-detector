@@ -2,17 +2,17 @@ from flask import Flask, render_template, request
 from datetime import date
 import json
 import os
-import requests   # ✅ ADDED
+import requests
 
 DATA_FILE = "scan_data.json"
 
-# ✅ BACKEND API LINK (ADDED)
+# ✅ BACKEND API LINK
 BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
 
 
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"date": str(date.today()), "count": 0,"threats": 0}
+        return {"date": str(date.today()), "count": 0, "threats": 0}
     
     with open(DATA_FILE, "r") as f:
         return json.load(f)
@@ -23,7 +23,8 @@ def save_data(data):
 
 app = Flask(__name__)
 
-# 🔴 (Your old ML function kept as backup — no change)
+
+# 🔴 Local fallback ML
 def predict_url(url):
     reasons = []
     score = 0
@@ -105,11 +106,9 @@ def tool():
             )
             response.raise_for_status()
             backend_data = response.json()
-            
-            # Print backend response for debugging
+
             print(f"✅ Backend Response: {backend_data}")
 
-            # Try to find the main verdict from common backend keys
             verdict = None
             for key in ["verdict", "prediction", "result", "label", "status"]:
                 if key in backend_data:
@@ -126,8 +125,9 @@ def tool():
                     result = "Safe"
                 else:
                     result = verdict.title()
+            else:
+                result = "Suspicious"   # ✅ FIX: fallback if no verdict
 
-            # Parse confidence from common backend keys
             confidence_value = None
             for key in ["confidence", "score", "probability", "certainty"]:
                 if key in backend_data:
@@ -141,17 +141,17 @@ def tool():
                 except Exception:
                     confidence = 0
 
+            # ✅ FIX: better default confidence mapping
             if confidence == 0:
                 if result == "Fake":
                     confidence = 90
                 elif result == "Suspicious":
                     confidence = 60
                 elif result == "Safe":
-                    confidence = 10
+                    confidence = 20   # changed from 10 → 20
                 else:
                     confidence = 50
 
-            # Build user-friendly reasons - show all backend data
             if isinstance(backend_data, dict):
                 reasons.append("--- Backend Analysis Results ---")
                 for key, value in backend_data.items():
@@ -163,26 +163,21 @@ def tool():
             if not reasons or len(reasons) == 1:
                 reasons = ["Backend response received but no details were parsed."]
 
+        # ✅ FIX: all errors now fallback instead of breaking UI
         except requests.exceptions.ConnectionError as e:
-            result = "Error"
-            confidence = 0
-            reasons = [f"❌ Connection Error: Cannot reach backend at {BACKEND_URL}", str(e)]
+            result, reasons, confidence = fallback_scan(url, str(e))
+
         except requests.exceptions.HTTPError as e:
-            result = "Error"
-            confidence = 0
-            reasons = [f"❌ HTTP Error: {e.response.status_code} - {e.response.reason}", f"Backend URL: {BACKEND_URL}"]
-        except requests.exceptions.Timeout:
-            result = "Error"
-            confidence = 0
-            reasons = [f"❌ Backend Request Timeout (10s exceeded)", f"Backend URL: {BACKEND_URL}"]
+            result, reasons, confidence = fallback_scan(url, str(e))
+
+        except requests.exceptions.Timeout as e:
+            result, reasons, confidence = fallback_scan(url, str(e))
+
         except requests.exceptions.RequestException as e:
-            result = "Error"
-            confidence = 0
-            reasons = [f"❌ Backend Request Failed: {str(e)}"]
+            result, reasons, confidence = fallback_scan(url, str(e))
+
         except ValueError as e:
-            result = "Error"
-            confidence = 0
-            reasons = [f"❌ Backend returned invalid JSON: {str(e)}"]
+            result, reasons, confidence = fallback_scan(url, str(e))
 
         return render_template(
             'tool.html',
@@ -196,7 +191,6 @@ def tool():
         'tool.html',
         scan_count=data["count"]
     )
-
 
 
 if __name__ == '__main__':

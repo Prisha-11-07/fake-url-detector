@@ -6,7 +6,6 @@ import requests
 
 DATA_FILE = "scan_data.json"
 
-# ✅ BACKEND API LINK
 BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
 
 
@@ -17,14 +16,16 @@ def load_data():
     with open(DATA_FILE, "r") as f:
         return json.load(f)
 
+
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
+
 app = Flask(__name__)
 
 
-# 🔴 Local fallback ML
+# 🔹 Local fallback scanner
 def predict_url(url):
     reasons = []
     score = 0
@@ -64,11 +65,12 @@ def predict_url(url):
 
 def fallback_scan(url, error_message=None):
     result, reasons, confidence = predict_url(url)
-    prefix = "Backend unavailable" if error_message else "Backend fallback activated"
+
     if error_message:
-        reasons.insert(0, f"{prefix}: {error_message}")
+        reasons.insert(0, f"Backend unavailable: {error_message}")
     else:
-        reasons.insert(0, f"{prefix}. Using local scan instead.")
+        reasons.insert(0, "Backend fallback activated. Using local scan.")
+
     return result, reasons, confidence
 
 
@@ -87,6 +89,7 @@ def tool():
         if not url:
             return render_template('tool.html', scan_count=data["count"])
 
+        # Reset daily count
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
             data["count"] = 0
@@ -94,8 +97,8 @@ def tool():
         data["count"] += 1
         save_data(data)
 
-        result = "Unknown"
-        confidence = 0
+        result = "Suspicious"
+        confidence = 50
         reasons = []
 
         try:
@@ -107,8 +110,9 @@ def tool():
             response.raise_for_status()
             backend_data = response.json()
 
-            print(f"✅ Backend Response: {backend_data}")
+            print("✅ Backend Response:", backend_data)
 
+            # 🔹 Get verdict
             verdict = None
             for key in ["verdict", "prediction", "result", "label", "status"]:
                 if key in backend_data:
@@ -116,67 +120,50 @@ def tool():
                     break
 
             if verdict:
-                verdict_upper = verdict.upper()
-                if verdict_upper in ["FAKE", "PHISHING", "MALICIOUS", "UNSAFE"]:
+                v = verdict.upper()
+
+                if v in ["FAKE", "PHISHING", "MALICIOUS", "UNSAFE"]:
                     result = "Fake"
-                elif verdict_upper in ["SUSPICIOUS", "UNKNOWN", "WARN"]:
+                elif v in ["SUSPICIOUS", "UNKNOWN", "WARN"]:
                     result = "Suspicious"
-                elif verdict_upper in ["SAFE", "LEGITIMATE", "CLEAN", "GOOD"]:
+                elif v in ["SAFE", "LEGITIMATE", "CLEAN", "GOOD"]:
                     result = "Safe"
                 else:
-                    result = verdict.title()
+                    result = "Suspicious"
             else:
-                result = "Suspicious"   # ✅ FIX: fallback if no verdict
+                result = "Suspicious"
 
+            # 🔹 Confidence
             confidence_value = None
-            for key in ["confidence", "score", "probability", "certainty"]:
+            for key in ["confidence", "score", "probability"]:
                 if key in backend_data:
                     confidence_value = backend_data[key]
                     break
 
             if confidence_value is not None:
                 try:
-                    confidence_float = float(confidence_value)
-                    confidence = int(confidence_float * 100) if confidence_float <= 1 else int(confidence_float)
-                except Exception:
+                    val = float(confidence_value)
+                    confidence = int(val * 100) if val <= 1 else int(val)
+                except:
                     confidence = 0
 
-            # ✅ FIX: better default confidence mapping
+            # 🔹 Default confidence fix
             if confidence == 0:
                 if result == "Fake":
                     confidence = 90
                 elif result == "Suspicious":
                     confidence = 60
                 elif result == "Safe":
-                    confidence = 20   # changed from 10 → 20
-                else:
-                    confidence = 50
+                    confidence = 20
 
+            # 🔹 Reasons
             if isinstance(backend_data, dict):
                 reasons.append("--- Backend Analysis Results ---")
-                for key, value in backend_data.items():
-                    if isinstance(value, list):
-                        reasons.append(f"{key.upper()}: {', '.join([str(v) for v in value])}")
-                    else:
-                        reasons.append(f"{key.upper()}: {value}")
+                for k, v in backend_data.items():
+                    reasons.append(f"{k.upper()}: {v}")
 
-            if not reasons or len(reasons) == 1:
-                reasons = ["Backend response received but no details were parsed."]
-
-        # ✅ FIX: all errors now fallback instead of breaking UI
-        except requests.exceptions.ConnectionError as e:
-            result, reasons, confidence = fallback_scan(url, str(e))
-
-        except requests.exceptions.HTTPError as e:
-            result, reasons, confidence = fallback_scan(url, str(e))
-
-        except requests.exceptions.Timeout as e:
-            result, reasons, confidence = fallback_scan(url, str(e))
-
-        except requests.exceptions.RequestException as e:
-            result, reasons, confidence = fallback_scan(url, str(e))
-
-        except ValueError as e:
+        except Exception as e:
+            # 🔥 IMPORTANT FIX → always fallback instead of breaking UI
             result, reasons, confidence = fallback_scan(url, str(e))
 
         return render_template(
@@ -187,10 +174,7 @@ def tool():
             scan_count=data["count"]
         )
 
-    return render_template(
-        'tool.html',
-        scan_count=data["count"]
-    )
+    return render_template('tool.html', scan_count=data["count"])
 
 
 if __name__ == '__main__':

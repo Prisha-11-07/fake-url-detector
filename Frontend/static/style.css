@@ -784,6 +784,41 @@ body.theme-dark .highlight-tag {
     line-height: 1.75;
 }
 
+/* ABOUT PAGE ALIGNMENT FIX */
+.about-hero,
+.mission-section,
+.how-it-works-section,
+.security-section,
+.impact-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-hero .hero-content,
+.content-wrapper {
+    width: 100%;
+    max-width: 1100px;
+}
+
+.mission-cards,
+.process-cards,
+.security-cards,
+.impact-cards {
+    justify-content: center;
+}
+
+.mission-cards {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
+}
+
+.process-cards,
+.security-cards,
+.impact-cards {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
 .hero h1 {
     font-size: 52px;
     font-weight: 700;
@@ -1688,7 +1723,8 @@ input {
 /* MISSION CARDS */
 .mission-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
+    justify-content: center;
     gap: 40px;
     max-width: 1200px;
     margin: 0 auto;
@@ -1862,7 +1898,8 @@ input {
 /* PROCESS CARDS */
 .process-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
+    justify-content: center;
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
@@ -1944,7 +1981,8 @@ input {
 /* SECURITY CARDS */
 .security-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
+    justify-content: center;
     gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
@@ -2016,7 +2054,8 @@ input {
 /* IMPACT CARDS */
 .impact-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
+    justify-content: center;
     gap: 40px;
     max-width: 1200px;
     margin: 0 auto;
@@ -2499,3 +2538,4 @@ body.theme-light .cta-section h2,
 body.theme-light .cta-section p {
     color: #ffffff !important;
 }
+ }

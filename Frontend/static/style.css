@@ -2433,8 +2433,11 @@ body.theme-light .how-container {
 /* HEADING */
 body.theme-light .how-it-works h2 {
     text-align: center;
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
     margin-bottom: 40px;
 }
 
@@ -2448,14 +2451,14 @@ body.theme-light .how-it-works .steps {
 
 /* STEP CARDS */
 body.theme-light .how-it-works .step {
-    background: rgba(0, 0, 0, 0.1);  /* darker background for white text */
+    background: rgba(0, 0, 0, 0.25);  /* stronger contrast for white text */
     backdrop-filter: blur(10px);
     border-radius: 16px;
     padding: 25px;
     min-width: 220px;
     max-width: 280px;
     flex: 1;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     transition: all 0.3s ease;
 }
 
@@ -2468,5 +2471,10 @@ body.theme-light .how-it-works .step:hover {
 /* TEXT INSIDE CARDS */
 body.theme-light .how-it-works .step h3,
 body.theme-light .how-it-works .step p {
-    color: #ffffff;
+    color: #ffffff !important;
+}
+
+body.theme-light .cta-section h2,
+body.theme-light .cta-section p {
+    color: #ffffff !important;
 }

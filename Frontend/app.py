@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from datetime import date
 import json
 import os
@@ -6,7 +6,7 @@ import requests
 
 DATA_FILE = "scan_data.json"
 
-BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
+BACKEND_URL = "http://localhost:5000/api/predict"
 
 
 def load_data():
@@ -81,6 +81,26 @@ def fallback_scan(url):
     result, reasons, confidence = predict_url(url)
     reasons.insert(0, "Local scan completed using fallback heuristics.")
     return result, reasons, confidence
+
+
+# 🔹 Local Backend Endpoint
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    data = request.get_json()
+    url = data.get('url', '')
+    
+    if not url:
+        return {"error": "No URL provided"}, 400
+    
+    result, reasons, confidence = predict_url(url)
+    
+    # Return in backend format
+    return {
+        "verdict": result,
+        "confidence": confidence,
+        "reasons": reasons,
+        "url": url
+    }
 
 
 @app.route('/')
@@ -167,10 +187,10 @@ def tool():
                     confidence = 20
 
             # 🔹 Reasons
-            if isinstance(backend_data, dict):
-                reasons.append("--- Backend Analysis Results ---")
-                for k, v in backend_data.items():
-                    reasons.append(f"{k.upper()}: {v}")
+            if isinstance(backend_data, dict) and "reasons" in backend_data:
+                # Use reasons from backend if available
+                if isinstance(backend_data["reasons"], list):
+                    reasons = backend_data["reasons"]
 
         except Exception as e:
             used_fallback = True

@@ -61,6 +61,16 @@ def predict_url(url):
     return result, reasons, confidence
 
 
+def fallback_scan(url, error_message=None):
+    result, reasons, confidence = predict_url(url)
+    prefix = "Backend unavailable" if error_message else "Backend fallback activated"
+    if error_message:
+        reasons.insert(0, f"{prefix}: {error_message}")
+    else:
+        reasons.insert(0, f"{prefix}. Using local scan instead.")
+    return result, reasons, confidence
+
+
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -159,13 +169,9 @@ def tool():
                 reasons = ["No additional details were returned by the backend."]
 
         except requests.exceptions.RequestException as e:
-            result = "Error"
-            confidence = 0
-            reasons = [f"Backend request failed: {str(e)}"]
+            result, reasons, confidence = fallback_scan(url, error_message=str(e))
         except ValueError:
-            result = "Error"
-            confidence = 0
-            reasons = ["Could not parse the backend response."]
+            result, reasons, confidence = fallback_scan(url, error_message="Could not parse the backend response.")
 
         return render_template(
             'tool.html',

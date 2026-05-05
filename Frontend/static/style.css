@@ -1388,6 +1388,10 @@ input {
      color: #ffffff;
  }
  
+ .result-card * {
+     color: #ffffff !important;
+ }
+ 
  .result-header {
     display: flex;
     justify-content: space-between;

@@ -40,12 +40,12 @@
 
     {% if result %}
     <div class="result-section">
-        <div class="result-card" id="resultBox" data-confidence="{{ confidence }}" data-explanation="URL Shield evaluates SSL status, domain reputation, redirect behavior, and suspicious URL patterns to generate a risk score.">
+        <div class="result-card" id="resultBox" data-confidence="{{ confidence }}" data-result="{{ result }}" data-explanation="URL Shield evaluates SSL status, domain reputation, redirect behavior, and suspicious URL patterns to generate a risk score.">
             <div class="result-header">
                 <h3 class="result-title">
-                    {% if confidence > 70 %}
+                    {% if result == "Fake" %}
                         🚨 High Risk Detected
-                    {% elif confidence > 40 %}
+                    {% elif result == "Suspicious" %}
                         ⚠️ Medium Risk Detected
                     {% else %}
                         ✅ URL Appears Safe
@@ -92,7 +92,11 @@
             </div>
 
             <div class="result-actions">
-                {% if confidence > 50 %}
+                {% if result == "Fake" %}
+                    <div class="warning-message">
+                        <strong>⚠️ Security Alert:</strong> This URL has been identified as potentially malicious. Exercise extreme caution and avoid clicking this link.
+                    </div>
+                {% elif result == "Suspicious" %}
                     <div class="warning-message">
                         <strong>⚠️ Security Alert:</strong> This URL shows signs of potential security threats. Exercise caution and avoid clicking suspicious links.
                     </div>
@@ -155,6 +159,35 @@ window.onload = function () {
 
     if (box) {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
+        var result = box.getAttribute("data-result") || "Suspicious";
+
+        // Determine risk percentage based on result and confidence
+        var riskPercentage;
+        var safePercentage;
+
+        if (result === "Fake") {
+            riskPercentage = confidence;
+            safePercentage = 100 - confidence;
+        } else if (result === "Suspicious") {
+            riskPercentage = confidence;
+            safePercentage = 100 - confidence;
+        } else { // Safe
+            riskPercentage = 100 - confidence;
+            safePercentage = confidence;
+        }
+
+        // Determine colors based on result type
+        var riskColor, safeColor;
+        if (result === "Fake") {
+            riskColor = '#ff4757'; // Red for fake
+            safeColor = '#2c3e50';
+        } else if (result === "Suspicious") {
+            riskColor = '#ffa726'; // Orange for suspicious
+            safeColor = '#2c3e50';
+        } else { // Safe
+            riskColor = '#4caf50'; // Green for safe
+            safeColor = '#2c3e50';
+        }
 
         // Create doughnut chart
         new Chart(document.getElementById('chart'), {
@@ -162,11 +195,8 @@ window.onload = function () {
             data: {
                 labels: ['Risk', 'Safe'],
                 datasets: [{
-                    data: [confidence, 100 - confidence],
-                    backgroundColor: [
-                        confidence > 70 ? '#ff4757' : confidence > 40 ? '#ffa726' : '#4caf50',
-                        '#2c3e50'
-                    ],
+                    data: [riskPercentage, safePercentage],
+                    backgroundColor: [riskColor, safeColor],
                     borderWidth: 0
                 }]
             },

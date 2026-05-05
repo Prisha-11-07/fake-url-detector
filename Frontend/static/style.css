@@ -1388,6 +1388,7 @@ input {
      color: #ffffff;
  }
  
+ .result-card,
  .result-card * {
      color: #ffffff !important;
  }
@@ -1573,8 +1574,7 @@ input {
 }
 
 .recent-scans h3 {
-    color: #ffffff;
-    margin-bottom: 30px;
+    color: #ffffff !important;
     font-size: 24px;
 }
 
@@ -1603,15 +1603,13 @@ input {
 .stat-info .stat-number {
     font-size: 28px;
     font-weight: 700;
-    color: #000000;
+    color: #ffffff !important;
     font-family: 'JetBrains Mono', monospace;
 }
 
-.stat-info .stat-desc {
-    color: #94a3b8;
-    font-size: 12px;
-    margin-top: 5px;
-}
+ .stat-info .stat-desc,
+ .recent-scans .stat-desc {
+    color: #000000 !important;
 
 /* RESPONSIVE DESIGN */
 @media (max-width: 768px) {

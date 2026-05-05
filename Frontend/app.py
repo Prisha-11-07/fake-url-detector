@@ -100,6 +100,7 @@ def tool():
         result = "Suspicious"
         confidence = 50
         reasons = []
+        used_fallback = False
 
         try:
             response = requests.post(
@@ -163,7 +164,7 @@ def tool():
                     reasons.append(f"{k.upper()}: {v}")
 
         except Exception as e:
-            # 🔥 IMPORTANT FIX → always fallback instead of breaking UI
+            used_fallback = True
             result, reasons, confidence = fallback_scan(url, str(e))
 
         return render_template(
@@ -171,7 +172,8 @@ def tool():
             result=result,
             confidence=confidence,
             reasons=reasons,
-            scan_count=data["count"]
+            scan_count=data["count"],
+            used_fallback=used_fallback
         )
 
     return render_template('tool.html', scan_count=data["count"])

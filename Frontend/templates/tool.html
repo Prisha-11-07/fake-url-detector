@@ -56,6 +56,12 @@
                     <span class="score-value">{{ confidence }}%</span>
                 </div>
             </div>
+            {% if used_fallback %}
+            <div class="fallback-note">
+                ⚠️ Backend unavailable, using fallback scan results.
+            </div>
+            {% endif %}
+
 
             <div class="chart-container">
                 <canvas id="chart" width="180" height="180"></canvas>
@@ -159,33 +165,39 @@ window.onload = function () {
 
     if (box) {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
-        var result = box.getAttribute("data-result") || "Suspicious";
+        var result = (box.getAttribute("data-result") || "Suspicious").toLowerCase();
 
         // Determine risk percentage based on result and confidence
         var riskPercentage;
         var safePercentage;
 
-        if (result === "Fake") {
+        if (result === "fake") {
             riskPercentage = confidence;
             safePercentage = 100 - confidence;
-        } else if (result === "Suspicious") {
+        } else if (result === "suspicious") {
             riskPercentage = confidence;
             safePercentage = 100 - confidence;
-        } else { // Safe
+        } else if (result === "safe") {
             riskPercentage = 100 - confidence;
             safePercentage = confidence;
+        } else {
+            riskPercentage = confidence;
+            safePercentage = 100 - confidence;
         }
 
         // Determine colors based on result type
         var riskColor, safeColor;
-        if (result === "Fake") {
+        if (result === "fake") {
             riskColor = '#ff4757'; // Red for fake
             safeColor = '#2c3e50';
-        } else if (result === "Suspicious") {
+        } else if (result === "suspicious") {
             riskColor = '#ffa726'; // Orange for suspicious
             safeColor = '#2c3e50';
-        } else { // Safe
+        } else if (result === "safe") {
             riskColor = '#4caf50'; // Green for safe
+            safeColor = '#2c3e50';
+        } else {
+            riskColor = '#ffa726';
             safeColor = '#2c3e50';
         }
 

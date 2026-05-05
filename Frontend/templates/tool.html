@@ -159,44 +159,45 @@
 window.onload = function () {
     var box = document.getElementById("resultBox");
 
-    if (box) {
-        var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
-        
+if (box) {
+    var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
+    var result = box.getAttribute("data-result") || "";
 
-        // Create doughnut chart
-        new Chart(document.getElementById('chart'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Risk', 'Safe'],
-        datasets: [{
-            data: [confidence, 100 - confidence],
-            backgroundColor: [
-                (function() {
-                    if (result === "Fake") {
-                        return '#ff4757'; // Red (High Risk)
-                    } else if (result === "Suspicious") {
-                        return '#ffa726'; // Orange (Medium Risk)
-                    } else if (result === "Safe") {
-                        return '#4caf50'; // Green (Safe)
-                    } else {
-                        return '#999'; // Default
-                    }
-                })(),
-                '#2c3e50'
-            ],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        }
+    let color;
+
+    if (result === "Fake") {
+        color = '#ff4757';
+    } else if (result === "Suspicious") {
+        color = '#ffa726';
+    } else if (result === "Safe") {
+        color = '#4caf50';
+    } else {
+        color = '#999';
     }
-});
+
+    const chartCanvas = document.getElementById('chart');
+
+    if (chartCanvas) {
+        new Chart(chartCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: ['Risk', 'Safe'],
+                datasets: [{
+                    data: [confidence, 100 - confidence],
+                    backgroundColor: [color, '#2c3e50'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+}
 
         // Animate result card appearance
         setTimeout(() => {
@@ -251,8 +252,7 @@ window.onload = function () {
             const nextTheme = document.body.classList.contains('theme-light') ? 'dark' : 'light';
             applyTheme(nextTheme);
         });
-    }
-};
+    };
 
 // Form submission handler
 document.querySelector('.analysis-form').addEventListener('submit', function(e) {

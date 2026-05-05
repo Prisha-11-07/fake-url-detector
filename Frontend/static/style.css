@@ -790,16 +790,44 @@ body.theme-dark .highlight-tag {
 .how-it-works-section,
 .security-section,
 .impact-section {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    padding: 60px 0;
+    margin: 0;
+}
+
+.about-hero {
+    padding-top: 80px;
+    padding-bottom: 80px;
 }
 
 .about-hero .hero-content,
-.content-wrapper {
-    width: 100%;
+.mission-section > .content-wrapper,
+.how-it-works-section > .content-wrapper,
+.security-section > .content-wrapper {
+    width: min(1100px, 100%);
     max-width: 1100px;
+    margin: 0 auto;
+    background: rgba(5, 10, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    box-shadow: 0 35px 90px rgba(0, 0, 0, 0.30);
+    backdrop-filter: blur(18px);
+    padding: 50px 45px;
+}
+
+.about-hero .hero-content {
+    padding: 60px 45px;
+}
+
+.mission-section > .content-wrapper,
+.how-it-works-section > .content-wrapper,
+.security-section > .content-wrapper {
+    margin-top: 20px;
 }
 
 .mission-cards,
@@ -807,6 +835,7 @@ body.theme-dark .highlight-tag {
 .security-cards,
 .impact-cards {
     justify-content: center;
+    width: 100%;
 }
 
 .mission-cards {
@@ -816,7 +845,7 @@ body.theme-dark .highlight-tag {
 .process-cards,
 .security-cards,
 .impact-cards {
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 560px));
 }
 
 .hero h1 {

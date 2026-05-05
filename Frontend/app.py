@@ -1,13 +1,55 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from datetime import date
 import json
 import os
 import requests
+# 🔥 ML IMPORTS
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+
+# 🔥 TRAINING DATA
+train_urls = [
+    "https://google.com",
+    "https://amazon.com",
+    "https://github.com",
+    "https://bankofamerica.com",
+
+    "http://login-bank.com",
+    "http://secure-paypal-login.com",
+    "http://verify-account-update.com",
+
+    "http://paypal-secure-update-login.com",
+    "http://amazon-login-security-alert.com",
+    "http://bank-verification-alert.com",
+
+    # short URLs
+    "http://bit.ly/abc123",
+    "http://tinyurl.com/fake",
+]
+
+train_labels = [
+    "SAFE", "SAFE", "SAFE", "SAFE",
+    "SUSPICIOUS", "SUSPICIOUS", "SUSPICIOUS",
+    "FAKE", "FAKE", "FAKE",
+    "SUSPICIOUS", "FAKE"
+]
+
+# 🔥 CREATE MODEL
+vectorizer = TfidfVectorizer()
+X_train = vectorizer.fit_transform(train_urls)
+
+model = LogisticRegression()
+model.fit(X_train, train_labels)
+
+SHORTENERS = [
+    "bit.ly", "tinyurl.com", "goo.gl", "t.co",
+    "ow.ly", "is.gd", "buff.ly", "adf.ly"
+]
 
 DATA_FILE = "scan_data.json"
 
-# 🔗 BACKEND API (make sure this is ACTIVE)
-BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
+# ✅ Call local backend (same app)
+BACKEND_URL = "http://127.0.0.1:5000/api/predict"
 
 
 def load_data():
@@ -25,6 +67,62 @@ def save_data(data):
 
 app = Flask(__name__)
 
+import re
+
+def normalize_url(url):
+    url = url.strip()
+
+    # Add protocol if missing
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = "http://" + url
+
+    return url
+
+# 🔥 IMPROVED DETECTION LOGIC
+def predict_url(url):
+    reasons = []
+
+    # 🔥 Normalize first
+    url = normalize_url(url)
+
+    # 🔥 Detect short URL
+    if any(short in url for short in SHORTENERS):
+        reasons.append("Uses URL shortening service (possible phishing)")
+        short_flag = True
+    else:
+        short_flag = False
+
+    # 🔥 ML Prediction
+    features = vectorizer.transform([url])
+    prediction = model.predict(features)[0]
+    probs = model.predict_proba(features)[0]
+
+    confidence = int(max(probs) * 100)
+
+    # 🔥 Add reasoning
+    if prediction == "SAFE":
+        reasons.append("No phishing patterns detected")
+    elif prediction == "SUSPICIOUS":
+        reasons.append("Contains suspicious structure or keywords")
+    else:
+        reasons.append("Matches phishing patterns")
+
+    # 🔥 Boost risk if short URL
+    if short_flag and prediction == "SAFE":
+        prediction = "SUSPICIOUS"
+        reasons.append("Short URL increases risk level")
+
+    # 🔥 Final mapping
+    if prediction == "SAFE":
+        result = "Safe"
+    elif prediction == "SUSPICIOUS":
+        result = "Suspicious"
+    else:
+        result = "Fake"
+
+    reasons.append(f"Model confidence: {confidence}%")
+
+    return result, reasons, confidence
 
 @app.route('/')
 def home():
@@ -36,9 +134,9 @@ def tool():
     data = load_data()
 
     if request.method == 'POST':
-        url = request.form['url']
+        url = normalize_url(request.form['url'])
 
-        # Update daily scan count
+        # Update count
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
             data["count"] = 0
@@ -47,32 +145,16 @@ def tool():
         save_data(data)
 
         try:
-            # 🔥 Call backend API
             response = requests.post(
                 BACKEND_URL,
                 json={"url": url},
-                timeout=20
+                timeout=10
             )
 
-            print("Status Code:", response.status_code)
-            print("Raw Response:", response.text)
+            backend_data = response.json()
 
-            # ❌ If backend not working → STOP
-            if response.status_code != 200:
-                raise Exception("Backend not responding properly")
-
-            # ❌ If response not JSON → STOP
-            try:
-                backend_data = response.json()
-            except:
-                raise Exception("Backend did not return valid JSON")
-
-            # ❌ Validate backend output
             verdict = backend_data.get("verdict", "").upper()
-            if verdict not in ["FAKE", "SAFE", "SUSPICIOUS"]:
-                raise Exception("Invalid backend output format")
 
-            # ✅ USE ONLY BACKEND RESULT
             if verdict == "FAKE":
                 result = "Fake"
                 confidence = 100
@@ -89,7 +171,6 @@ def tool():
             ]
 
         except Exception as e:
-            # ❌ DO NOT FAKE RESULT
             result = "Error"
             confidence = 0
             reasons = [f"Backend Error: {str(e)}"]
@@ -102,10 +183,29 @@ def tool():
             scan_count=data["count"]
         )
 
-    return render_template(
-        'tool.html',
-        scan_count=data["count"]
-    )
+    return render_template('tool.html', scan_count=data["count"])
+
+
+# ✅ BACKEND API (same app)
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    data = request.get_json()
+    url = data.get("url", "")
+
+    result, reasons, confidence = predict_url(url)
+
+    if result == "Fake":
+        verdict = "FAKE"
+    elif result == "Suspicious":
+        verdict = "SUSPICIOUS"
+    else:
+        verdict = "SAFE"
+
+    return jsonify({
+        "verdict": verdict,
+        "message": ", ".join(reasons),
+        "protocol": "HTTPS" if "https" in url else "HTTP"
+    })
 
 
 @app.route('/about')

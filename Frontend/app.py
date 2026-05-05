@@ -2,63 +2,28 @@ from flask import Flask, render_template, request
 from datetime import date
 import json
 import os
-import requests   # ✅ ADDED
+import requests
 
 DATA_FILE = "scan_data.json"
 
-# ✅ BACKEND API LINK (ADDED)
+# 🔗 BACKEND API (make sure this is ACTIVE)
 BACKEND_URL = "https://cameo-unmasked-gracious.ngrok-free.dev/api/predict"
 
 
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"date": str(date.today()), "count": 0,"threats": 0}
-    
+        return {"date": str(date.today()), "count": 0, "threats": 0}
+
     with open(DATA_FILE, "r") as f:
         return json.load(f)
+
 
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f)
 
+
 app = Flask(__name__)
-
-# 🔴 (Your old ML function kept as backup — no change)
-def predict_url(url):
-    reasons = []
-    score = 0
-
-    if "https" not in url:
-        reasons.append("No HTTPS encryption")
-        score += 25
-
-    if "login" in url.lower():
-        reasons.append("Contains 'login' (phishing keyword)")
-        score += 15
-
-    if "bank" in url.lower():
-        reasons.append("Contains 'bank' keyword")
-        score += 15
-
-    if "@" in url:
-        reasons.append("Contains '@' redirect symbol")
-        score += 15
-
-    if "-" in url:
-        reasons.append("Contains '-' which may indicate fake domain")
-        score += 10
-
-    if len(url) > 75:
-        reasons.append("URL length is suspiciously long")
-        score += 20
-
-    result = "Fake" if score > 50 else "Safe"
-    confidence = min(score, 100)
-
-    if not reasons:
-        reasons.append("No suspicious patterns detected")
-
-    return result, reasons, confidence
 
 
 @app.route('/')
@@ -73,6 +38,7 @@ def tool():
     if request.method == 'POST':
         url = request.form['url']
 
+        # Update daily scan count
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
             data["count"] = 0
@@ -81,26 +47,41 @@ def tool():
         save_data(data)
 
         try:
+            # 🔥 Call backend API
             response = requests.post(
                 BACKEND_URL,
-                json={"url": url}
+                json={"url": url},
+                timeout=20
             )
 
-            backend_data = response.json()
-            print(backend_data)
+            print("Status Code:", response.status_code)
+            print("Raw Response:", response.text)
 
-            # ✅ 🔥 FIXED PART (READING CORRECT KEY)
+            # ❌ If backend not working → STOP
+            if response.status_code != 200:
+                raise Exception("Backend not responding properly")
+
+            # ❌ If response not JSON → STOP
+            try:
+                backend_data = response.json()
+            except:
+                raise Exception("Backend did not return valid JSON")
+
+            # ❌ Validate backend output
             verdict = backend_data.get("verdict", "").upper()
+            if verdict not in ["FAKE", "SAFE", "SUSPICIOUS"]:
+                raise Exception("Invalid backend output format")
 
+            # ✅ USE ONLY BACKEND RESULT
             if verdict == "FAKE":
                 result = "Fake"
-                confidence = 90
+                confidence = 100
             elif verdict == "SUSPICIOUS":
                 result = "Suspicious"
                 confidence = 60
             else:
                 result = "Safe"
-                confidence = 10
+                confidence = 0
 
             reasons = [
                 backend_data.get("message", "No details provided"),
@@ -108,9 +89,10 @@ def tool():
             ]
 
         except Exception as e:
+            # ❌ DO NOT FAKE RESULT
             result = "Error"
             confidence = 0
-            reasons = [f"Error occurred: {str(e)}"]
+            reasons = [f"Backend Error: {str(e)}"]
 
         return render_template(
             'tool.html',

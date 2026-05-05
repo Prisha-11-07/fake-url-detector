@@ -56,16 +56,6 @@
                     <span class="score-value">{{ confidence }}%</span>
                 </div>
             </div>
-            {% if used_fallback %}
-            <div class="fallback-note">
-                ⚠️ Using local fallback (backend unavailable)
-            </div>
-            {% else %}
-            <div class="backend-note">
-                ✓ Results from backend
-            </div>
-            {% endif %}
-
             <div class="chart-container">
                 <canvas id="chart" width="180" height="180"></canvas>
                 <div class="chart-legend">
@@ -102,18 +92,22 @@
 
             <div class="result-actions">
                 {% if result == "Fake" %}
-                    <div class="warning-message">
-                        <strong>⚠️ Security Alert:</strong> This URL has been identified as potentially malicious. Exercise extreme caution and avoid clicking this link.
-                    </div>
-                {% elif result == "Suspicious" %}
-                    <div class="warning-message">
-                        <strong>⚠️ Security Alert:</strong> This URL shows signs of potential security threats. Exercise caution and avoid clicking suspicious links.
-                    </div>
-                {% else %}
-                    <div class="safe-message">
-                        <strong>✅ Safe URL:</strong> This URL appears to be legitimate based on our analysis. However, always stay vigilant online.
-                    </div>
-                {% endif %}
+    <div class="warning-message">
+        <strong>⚠️ Security Alert:</strong> This URL is malicious.
+    </div>
+{% elif result == "Suspicious" %}
+    <div class="warning-message">
+        <strong>⚠️ Warning:</strong> This URL is suspicious.
+    </div>
+{% elif result == "Safe" %}
+    <div class="safe-message">
+        <strong>✅ Safe URL:</strong> This URL is safe.
+    </div>
+{% else %}
+    <div class="warning-message">
+        <strong>❌ Backend Error:</strong> Unable to fetch result from backend.
+    </div>
+{% endif %}
 
                 <div class="action-buttons">
                     <button class="action-btn report" onclick="reportUrl()">📢 Report URL</button>
@@ -165,6 +159,7 @@
 <script>
 window.onload = function () {
     var box = document.getElementById("resultBox");
+    console.log("Result:", result, "Confidence:", confidence);
 
     if (box) {
         var confidence = parseInt(box.getAttribute("data-confidence")) || 0;
@@ -175,18 +170,18 @@ window.onload = function () {
         var safePercentage;
 
         if (result === "fake") {
-            riskPercentage = confidence;
-            safePercentage = 100 - confidence;
-        } else if (result === "suspicious") {
-            riskPercentage = confidence;
-            safePercentage = 100 - confidence;
-        } else if (result === "safe") {
-            riskPercentage = 100 - confidence;
-            safePercentage = confidence;
-        } else {
-            riskPercentage = confidence;
-            safePercentage = 100 - confidence;
-        }
+    riskPercentage = 100;
+    safePercentage = 0;
+} else if (result === "suspicious") {
+    riskPercentage = 60;
+    safePercentage = 40;
+} else if (result === "safe") {
+    riskPercentage = 0;
+    safePercentage = 100;
+} else {
+    riskPercentage = 0;
+    safePercentage = 0;
+}
 
         // Determine colors based on result type
         var riskColor, safeColor;
@@ -197,8 +192,8 @@ window.onload = function () {
             riskColor = '#ffa726'; // Orange for suspicious
             safeColor = '#2c3e50';
         } else if (result === "safe") {
-            riskColor = '#4caf50'; // Green for safe
-            safeColor = '#2c3e50';
+            riskColor = '#2c3e50';
+            safeColor = '#4caf50';
         } else {
             riskColor = '#ffa726';
             safeColor = '#2c3e50';

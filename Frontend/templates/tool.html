@@ -56,6 +56,16 @@
                     <span class="score-value">{{ confidence }}%</span>
                 </div>
             </div>
+            {% if used_fallback %}
+            <div class="fallback-note">
+                ⚠️ Using local fallback (backend unavailable)
+            </div>
+            {% else %}
+            <div class="backend-note">
+                ✓ Results from backend
+            </div>
+            {% endif %}
+
             <div class="chart-container">
                 <canvas id="chart" width="180" height="180"></canvas>
                 <div class="chart-legend">

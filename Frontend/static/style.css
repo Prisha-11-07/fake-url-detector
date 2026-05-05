@@ -291,7 +291,6 @@ body.theme-light .section-header {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     background: none !important;
-    -webkit-text-fill-color: var(--text-color) !important;
     -webkit-background-clip: unset !important;
     background-clip: unset !important;
 }

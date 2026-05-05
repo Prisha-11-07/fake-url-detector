@@ -2257,17 +2257,24 @@ input {
 /* CONTENT WRAPPER FOR ABOUT PAGE SECTIONS */
 .content-wrapper {
     max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0 auto 40px;
     padding: 40px 30px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(5, 10, 20, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(5, 10, 20, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 30px;
     box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(20px);
+}
+
+.mission-section .content-wrapper,
+.how-it-works-section .content-wrapper,
+.security-section .content-wrapper {
+    padding: 50px 35px;
 }
 
 .content-wrapper h2 {
@@ -2325,7 +2332,7 @@ input {
 }
 
 .mission-section {
-    background: linear-gradient(135deg, rgba(0, 255, 255, 0.03), rgba(255, 0, 255, 0.02));
+    background: transparent;
 }
 
 .technology-section {
@@ -2333,11 +2340,11 @@ input {
 }
 
 .how-it-works-section {
-    background: linear-gradient(135deg, rgba(0, 255, 255, 0.02), rgba(255, 0, 255, 0.03));
+    background: transparent;
 }
 
 .security-section {
-    background: linear-gradient(135deg, rgba(255, 0, 255, 0.03), rgba(0, 255, 255, 0.02));
+    background: transparent;
 }
 
 .impact-section {

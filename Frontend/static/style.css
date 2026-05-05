@@ -2472,11 +2472,19 @@ body.theme-light .how-it-works .step:hover {
 body.theme-light .how-it-works .step h3,
 body.theme-light .how-it-works .step p {
     color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
 }
 
 body.theme-light .cta-section h2,
 body.theme-light .cta-section p {
     color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
 }
 
 body.theme-light .cta-section h2,

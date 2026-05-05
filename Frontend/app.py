@@ -71,7 +71,10 @@ def tool():
     data = load_data()
 
     if request.method == 'POST':
-        url = request.form['url']
+        url = request.form.get('url', '').strip()
+
+        if not url:
+            return render_template('tool.html', scan_count=data["count"])
 
         if data["date"] != str(date.today()):
             data["date"] = str(date.today())
@@ -80,37 +83,89 @@ def tool():
         data["count"] += 1
         save_data(data)
 
+        result = "Unknown"
+        confidence = 0
+        reasons = []
+
         try:
             response = requests.post(
                 BACKEND_URL,
-                json={"url": url}
+                json={"url": url},
+                timeout=10
             )
-
+            response.raise_for_status()
             backend_data = response.json()
-            print(backend_data)
 
-            # ✅ 🔥 FIXED PART (READING CORRECT KEY)
-            verdict = backend_data.get("verdict", "").upper()
+            # Try to find the main verdict from common backend keys
+            verdict = None
+            for key in ["verdict", "prediction", "result", "label", "status"]:
+                if key in backend_data:
+                    verdict = str(backend_data[key]).strip()
+                    break
 
-            if verdict == "FAKE":
-                result = "Fake"
-                confidence = 90
-            elif verdict == "SUSPICIOUS":
-                result = "Suspicious"
-                confidence = 60
-            else:
-                result = "Safe"
-                confidence = 10
+            if verdict:
+                verdict_upper = verdict.upper()
+                if verdict_upper in ["FAKE", "PHISHING", "MALICIOUS", "UNSAFE"]:
+                    result = "Fake"
+                elif verdict_upper in ["SUSPICIOUS", "UNKNOWN", "WARN"]:
+                    result = "Suspicious"
+                elif verdict_upper in ["SAFE", "LEGITIMATE", "CLEAN", "GOOD"]:
+                    result = "Safe"
+                else:
+                    result = verdict.title()
 
-            reasons = [
-                backend_data.get("message", "No details provided"),
-                f"Protocol: {backend_data.get('protocol', 'Unknown')}"
-            ]
+            # Parse confidence from common backend keys
+            confidence_value = None
+            for key in ["confidence", "score", "probability", "certainty"]:
+                if key in backend_data:
+                    confidence_value = backend_data[key]
+                    break
 
-        except Exception as e:
+            if confidence_value is not None:
+                try:
+                    confidence_float = float(confidence_value)
+                    confidence = int(confidence_float * 100) if confidence_float <= 1 else int(confidence_float)
+                except Exception:
+                    confidence = 0
+
+            if confidence == 0:
+                if result == "Fake":
+                    confidence = 90
+                elif result == "Suspicious":
+                    confidence = 60
+                elif result == "Safe":
+                    confidence = 10
+                else:
+                    confidence = 50
+
+            # Build user-friendly reasons
+            if isinstance(backend_data, dict):
+                if backend_data.get("message"):
+                    reasons.append(str(backend_data.get("message")))
+                if backend_data.get("reason"):
+                    reasons.append(str(backend_data.get("reason")))
+                if backend_data.get("details"):
+                    details = backend_data.get("details")
+                    if isinstance(details, list):
+                        reasons.extend([str(item) for item in details])
+                    else:
+                        reasons.append(str(details))
+                if backend_data.get("protocol"):
+                    reasons.append(f"Protocol: {backend_data.get('protocol')}")
+                if backend_data.get("domain"):
+                    reasons.append(f"Domain: {backend_data.get('domain')}")
+
+            if not reasons:
+                reasons = ["No additional details were returned by the backend."]
+
+        except requests.exceptions.RequestException as e:
             result = "Error"
             confidence = 0
-            reasons = [f"Error occurred: {str(e)}"]
+            reasons = [f"Backend request failed: {str(e)}"]
+        except ValueError:
+            result = "Error"
+            confidence = 0
+            reasons = ["Could not parse the backend response."]
 
         return render_template(
             'tool.html',

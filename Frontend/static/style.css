@@ -1126,10 +1126,7 @@ input {
 .how-it-works h2 {
     font-size: 32px;
     margin-bottom: 50px;
-    background: linear-gradient(45deg, #ff00ff, #00ffff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #ffffff;
 }
 
 .steps {

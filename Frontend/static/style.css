@@ -1573,7 +1573,7 @@ input {
 }
 
 .recent-scans h3 {
-    color: #00ffff;
+    color: #ffffff;
     margin-bottom: 30px;
     font-size: 24px;
 }
@@ -1603,7 +1603,7 @@ input {
 .stat-info .stat-number {
     font-size: 28px;
     font-weight: 700;
-    color: #ffffff;
+    color: #000000;
     font-family: 'JetBrains Mono', monospace;
 }
 
